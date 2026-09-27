@@ -8,10 +8,19 @@ import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 import org.vosk.android.StorageService
+import java.io.File
 import java.io.IOException
 
 private const val TAG = "VoskDictation"
 private const val SAMPLE_RATE = 16000.0f
+private const val MODEL_DIR_NAME = "model"
+
+/** Sanity-check marker: real am/final.mdl in this model is ~16MB; anything far smaller means a
+ *  previous unpack attempt was interrupted (app killed, crash, low storage at the time) and left
+ *  a corrupt/partial copy behind — one that StorageService.unpack would otherwise keep reusing
+ *  forever since it never re-copies an existing target directory. */
+private const val MODEL_MARKER_RELATIVE_PATH = "am/final.mdl"
+private const val MODEL_MARKER_MIN_BYTES = 1_000_000L
 
 /**
  * Loads the bundled Vosk model exactly once per process and hands back the shared instance.
@@ -23,6 +32,15 @@ object VoskEngine {
     @Volatile private var loading = false
     private val pendingReady = mutableListOf<(Model) -> Unit>()
     private val pendingError = mutableListOf<(String) -> Unit>()
+
+    private fun discardModelDirIfCorrupt(context: Context) {
+        val modelDir = File(context.filesDir, MODEL_DIR_NAME)
+        if (!modelDir.exists()) return
+        val marker = File(modelDir, MODEL_MARKER_RELATIVE_PATH)
+        if (marker.exists() && marker.length() >= MODEL_MARKER_MIN_BYTES) return
+        Log.w(TAG, "Discarding incomplete unpacked model at $modelDir (previous attempt likely interrupted)")
+        modelDir.deleteRecursively()
+    }
 
     @Synchronized
     fun ensureModelLoaded(context: Context, onReady: (Model) -> Unit, onError: (String) -> Unit) {
@@ -36,10 +54,13 @@ object VoskEngine {
         if (loading) return
         loading = true
 
+        val appContext = context.applicationContext
+        discardModelDirIfCorrupt(appContext)
+
         StorageService.unpack(
-            context.applicationContext,
+            appContext,
             "model-en-us-small",
-            "model",
+            MODEL_DIR_NAME,
             { loadedModel: Model ->
                 synchronized(this) {
                     model = loadedModel
