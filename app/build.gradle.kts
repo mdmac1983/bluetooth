@@ -11,8 +11,8 @@ android {
         applicationId = "app.orionmd.btvoicetype"
         minSdk = 29
         targetSdk = 29
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
         ndk {
             // ALPS/MediaTek Android 10 Go Edition tablet is 32-bit ARM only
             abiFilters += listOf("armeabi-v7a")
