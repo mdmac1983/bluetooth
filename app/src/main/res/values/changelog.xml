@@ -3,6 +3,7 @@
     <!-- BUILD_WORKFLOW: new entries are inserted directly below this marker on every automated build -->
     <string-array name="changelog_entries">
         <!-- CHANGELOG_INSERT_POINT -->
+        <item>v1.1 — Initial build of BT Voice Type</item>
         <item>v1.0 — Initial release: BT Voice Type keyboard, Bluetooth SCO mic routing, speech-to-text dictation, activation key gate.</item>
     </string-array>
 </resources>
