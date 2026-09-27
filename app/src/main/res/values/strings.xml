@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BT Voice Type</string>
+    <string name="ime_settings">BT Voice Type Settings</string>
+    <string name="enable_keyboard">1. Enable Keyboard</string>
+    <string name="enable_keyboard_desc">Turn on BT Voice Type as an input method in Android system settings.</string>
+    <string name="choose_keyboard">2. Choose Keyboard</string>
+    <string name="choose_keyboard_desc">Switch to BT Voice Type from the keyboard picker whenever you want to dictate.</string>
+    <string name="pair_bt">3. Pair Your Bluetooth Mic</string>
+    <string name="pair_bt_desc">Pair your Bluetooth headset/mic in Android Bluetooth settings first. BT Voice Type will route audio through it automatically when you tap the mic button.</string>
+    <string name="open_ime_settings">Open Keyboard Settings</string>
+    <string name="open_bt_settings">Open Bluetooth Settings</string>
+    <string name="open_input_picker">Open Input Method Picker</string>
+    <string name="activation_title">Activation</string>
+    <string name="activation_status_label">Status:</string>
+    <string name="enter_key_hint">Enter activation key</string>
+    <string name="activate_button">Activate</string>
+    <string name="purchase_button">Purchase Key</string>
+    <string name="changelog_title">Changelog</string>
+    <string name="speech_engine_title">Speech Engine</string>
+    <string name="speech_engine_desc">Dictation uses a small speech-recognition engine built directly into this app (Vosk, English) — fully on-device, no internet and no Google app/services required at all. The first time you dictate, the app unpacks its speech model to storage, which takes a few seconds; after that it\'s instant.</string>
+
+    <string name="floating_mic_service_label">BT Voice Type — Floating Mic</string>
+    <string name="floating_mic_service_desc">Shows a small draggable mic button on top of every app. Tap it to dictate straight into whatever text field is focused, using your Bluetooth mic — no need to switch keyboards.</string>
+    <string name="floating_mic_title">Floating Mic (works in any app)</string>
+    <string name="floating_mic_desc">A small draggable mic bubble that stays on screen over any app — Gboard included — so you never have to switch keyboards to dictate. Needs two one-time permissions below.</string>
+    <string name="grant_overlay_permission">1. Allow Display Over Other Apps</string>
+    <string name="grant_overlay_permission_desc">Needed so the mic bubble can float on top of whatever app you\'re using.</string>
+    <string name="open_overlay_settings">Open Overlay Permission Settings</string>
+    <string name="enable_accessibility_service">2. Enable the Accessibility Service</string>
+    <string name="enable_accessibility_service_desc">Needed so the bubble can type recognized text into the field you\'re focused on, in any app. In the list, find \"BT Voice Type — Floating Mic\" and turn it on.</string>
+    <string name="open_accessibility_settings">Open Accessibility Settings</string>
+    <string name="floating_mic_status_on">Bubble active: overlay ✓, accessibility service ✓</string>
+    <string name="floating_mic_status_overlay_missing">Overlay permission not granted yet</string>
+    <string name="floating_mic_status_service_missing">Accessibility service not enabled yet</string>
+</resources>

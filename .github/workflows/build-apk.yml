@@ -1,0 +1,137 @@
+name: Build APK
+
+# Chains automatically after Unzip Project (or Bootstrap Project) finishes, can
+# also be run manually, and runs on direct pushes to app code. Bumps the
+# version by 0.1, inserts a changelog line, builds the debug/release APK, and
+# publishes it as a GitHub Release.
+on:
+  workflow_run:
+    workflows: ["Unzip Project", "Bootstrap Project"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      changelog_note:
+        description: "One-line changelog entry for this build"
+        required: false
+        default: "Build updates"
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Bump version (+0.1) and update changelog
+        id: bump
+        run: |
+          set -e
+          GRADLE_FILE="app/build.gradle.kts"
+          CHANGELOG_FILE="app/src/main/res/values/changelog.xml"
+
+          CURRENT_NAME=$(grep -oP 'versionName = "\K[0-9]+\.[0-9]+' "$GRADLE_FILE")
+          CURRENT_CODE=$(grep -oP 'versionCode = \K[0-9]+' "$GRADLE_FILE")
+
+          MAJOR=$(echo "$CURRENT_NAME" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT_NAME" | cut -d. -f2)
+          NEW_MINOR=$((MINOR + 1))
+          NEW_NAME="${MAJOR}.${NEW_MINOR}"
+          NEW_CODE=$((CURRENT_CODE + 1))
+
+          sed -i "s/versionName = \"$CURRENT_NAME\"/versionName = \"$NEW_NAME\"/" "$GRADLE_FILE"
+          sed -i "s/versionCode = $CURRENT_CODE/versionCode = $NEW_CODE/" "$GRADLE_FILE"
+
+          NOTE="${{ github.event.inputs.changelog_note }}"
+          if [ -z "$NOTE" ]; then
+            NOTE="Automated build updates"
+          fi
+          ESCAPED_NOTE=$(echo "$NOTE" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          sed -i "s#<!-- CHANGELOG_INSERT_POINT -->#<!-- CHANGELOG_INSERT_POINT -->\n        <item>v${NEW_NAME} — ${ESCAPED_NOTE}</item>#" "$CHANGELOG_FILE"
+
+          echo "new_name=$NEW_NAME" >> "$GITHUB_OUTPUT"
+          echo "new_code=$NEW_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Commit version bump
+        run: |
+          git config user.name "orionmd-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add app/build.gradle.kts app/src/main/res/values/changelog.xml
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new_name }}"
+          git push
+
+      - name: Decode release keystore (optional)
+        if: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          echo "RELEASE_KEYSTORE_PATH=$PWD/release.keystore" >> "$GITHUB_ENV"
+          echo "RELEASE_KEYSTORE_PASSWORD=${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Cache speech model download
+        id: model-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/vosk-model-cache
+          key: vosk-model-small-en-us-0.15
+
+      - name: Download bundled speech model (Vosk, English)
+        run: |
+          set -e
+          MODEL_DIR="app/src/main/assets/model-en-us-small"
+          mkdir -p "$MODEL_DIR"
+          if [ ! -d /tmp/vosk-model-cache/vosk-model-small-en-us-0.15 ]; then
+            echo "Fetching Vosk speech model (~40MB, not stored in the repo/zip since it's over GitHub's 25MB web-upload limit)..."
+            mkdir -p /tmp/vosk-model-cache
+            curl -sSL -o /tmp/vosk-model.zip https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+            unzip -q /tmp/vosk-model.zip -d /tmp/vosk-model-cache
+            rm -f /tmp/vosk-model.zip
+          else
+            echo "Using cached model from a previous build."
+          fi
+          cp -r /tmp/vosk-model-cache/vosk-model-small-en-us-0.15/* "$MODEL_DIR"/
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Locate APK
+        id: apk
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n1)
+          echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: btvoicetype-v${{ steps.bump.outputs.new_name }}
+          path: ${{ steps.apk.outputs.path }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump.outputs.new_name }}
+          name: v${{ steps.bump.outputs.new_name }}
+          files: ${{ steps.apk.outputs.path }}
+          body: ${{ github.event.inputs.changelog_note }}

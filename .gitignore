@@ -1,0 +1,10 @@
+# Speech model is downloaded fresh by build-apk.yml (it's ~40MB, over GitHub's
+# 25MB web-upload limit, so it's never committed or included in the project zip).
+app/src/main/assets/model-en-us-small/
+
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/

@@ -1,0 +1,58 @@
+name: Unzip Project
+
+# Drop a .zip file anywhere in the repo root (via GitHub's web "Add file" ->
+# "Upload files") and push it to main. This workflow extracts it into the repo
+# root (overwriting matching files), deletes the zip, and commits the result.
+# It never touches anything under .github/.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.zip"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: unzip-and-build
+  cancel-in-progress: false
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract uploaded zip(s)
+        run: |
+          set -e
+          shopt -s globstar nullglob
+          found=0
+          for z in **/*.zip; do
+            # never touch anything under .github
+            case "$z" in
+              .github/*) continue ;;
+            esac
+            echo "Extracting $z ..."
+            unzip -o "$z" -d . -x ".github/*"
+            rm -f "$z"
+            found=1
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "No zip files found outside .github — nothing to do."
+          fi
+
+      - name: Commit extracted contents
+        run: |
+          git config user.name "orionmd-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A -- . ':!.github'
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "chore: extract uploaded project zip"
+            git push
+          fi

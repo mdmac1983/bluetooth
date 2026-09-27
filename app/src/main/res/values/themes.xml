@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BTVoiceType" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/orionmd_navy</item>
+        <item name="colorPrimaryDark">@color/orionmd_navy</item>
+        <item name="colorAccent">@color/orionmd_gold</item>
+    </style>
+</resources>

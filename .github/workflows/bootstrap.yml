@@ -1,0 +1,55 @@
+name: Bootstrap Project
+
+# ONE-TIME, manually-triggered setup for a brand-new repo from an Android
+# device with no PC. Paste this file in via GitHub's web "Create new file"
+# (alongside unzip.yml and build-apk.yml) BEFORE uploading the initial
+# full-project zip. Then: Actions tab -> Bootstrap Project -> Run workflow.
+# It extracts a whole-project zip sitting in the repo root into the repo
+# root, touching everything except .github (which a workflow can never
+# modify anyway), then removes the zip and commits.
+on:
+  workflow_dispatch:
+    inputs:
+      zip_filename:
+        description: "Name of the zip file already uploaded to the repo root (leave default to auto-detect)"
+        required: false
+        default: "auto"
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract whole-project zip
+        run: |
+          set -e
+          INPUT="${{ github.event.inputs.zip_filename }}"
+          if [ "$INPUT" = "auto" ] || [ -z "$INPUT" ]; then
+            ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n1)
+          else
+            ZIP_FILE="./$INPUT"
+          fi
+
+          if [ -z "$ZIP_FILE" ] || [ ! -f "$ZIP_FILE" ]; then
+            echo "::error::No zip file found in the repo root. Upload the project zip first."
+            exit 1
+          fi
+
+          echo "Extracting $ZIP_FILE into repo root (excluding .github) ..."
+          unzip -o "$ZIP_FILE" -d . -x ".github/*"
+          rm -f "$ZIP_FILE"
+
+      - name: Commit bootstrapped project
+        run: |
+          git config user.name "orionmd-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A -- . ':!.github'
+          git commit -m "chore: bootstrap project from initial zip"
+          git push

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/orionmd_navy"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#CCCCCC"
+        android:textSize="13sp"
+        android:paddingBottom="8dp"
+        android:text="Tap the mic and speak" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/btnBackspace"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="⌫"
+            android:textColor="@color/key_text"
+            android:backgroundTint="@color/key_bg" />
+
+        <ImageButton
+            android:id="@+id/btnMic"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/mic_button_bg"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="@string/app_name" />
+
+        <Button
+            android:id="@+id/btnSpace"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="␣"
+            android:textColor="@color/key_text"
+            android:backgroundTint="@color/key_bg" />
+
+        <Button
+            android:id="@+id/btnEnter"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="⏎"
+            android:textColor="@color/key_text"
+            android:backgroundTint="@color/key_bg" />
+
+        <Button
+            android:id="@+id/btnSwitchIme"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="⌨"
+            android:textColor="@color/key_text"
+            android:backgroundTint="@color/key_bg" />
+    </LinearLayout>
+</LinearLayout>
