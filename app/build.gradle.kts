@@ -20,6 +20,19 @@ android {
     }
 
     signingConfigs {
+        // Fixed, checked-in debug key (app/keystore/debug.keystore) instead of the AGP-default
+        // ~/.android/debug.keystore. That default is auto-generated with a fresh random key the
+        // first time it's needed on any given machine — meaning every CI run on a clean GitHub
+        // Actions runner got a *different* signing key, so each build was seen by Android as a
+        // different app and could never be installed as an update over the previous one (silent
+        // "App not installed" / signature-mismatch failure). Pinning one key here makes every
+        // build, from CI or anywhere else, update in place.
+        getByName("debug") {
+            storeFile = file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         create("release") {
             val keystorePath = System.getenv("RELEASE_KEYSTORE_PATH")
             if (!keystorePath.isNullOrBlank()) {
